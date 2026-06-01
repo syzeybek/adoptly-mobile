@@ -1,27 +1,30 @@
 import axios from 'axios';
-// import * as SecureStore from 'expo-secure-store'; // İleride giriş yapma (Auth) sistemini kurduğumuzda burayı açacağız
+import * as SecureStore from 'expo-secure-store';
 
-// ⚠️ DİKKAT: '192.168.1.X' yazan yere kendi bilgisayarının GÜNCEL Wi-Fi IP adresini yazmayı unutma!
-const BASE_URL = 'http://172.20.10.3:8080/api';
+const BASE_URL = 'https://adoptly-mobilbackend.onrender.com';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000, // 10 saniye içinde cevap gelmezse isteği iptal et
+  timeout: 60000, 
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 🚀 İSTEK (REQUEST) ARAYA GİRİCİSİ - Giden her isteği kontrol eder
+// 🚀 İSTEK (REQUEST) ARAYA GİRİCİSİ - Akıllı Versiyon
 apiClient.interceptors.request.use(
   async (config: any) => {
-    console.log(`🚀 [API İSTEĞİ]: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    const token = await SecureStore.getItemAsync('user_token');
     
-    // İleride Login/Auth yaptığımızda buraya SecureStore'dan token çekip ekleyeceğiz:
-    // const token = await SecureStore.getItemAsync('user_token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    console.log(`🚀 [API İSTEĞİ]: ${config.method?.toUpperCase()} ${config.url}`);
+    
+    // 👇 KRİTİK HAMLE: Sadece GET "olmayan" işlemlerde (POST, DELETE vb.) kimliği göster!
+    if (token && config.method?.toUpperCase() !== 'GET') {
+      console.log(`🔑 [KART GÖSTERİLDİ]: Yeni işlem yapıldığı için token eklendi.`);
+      config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.log(`👀 [KART GİZLENDİ]: GET (Okuma) işlemi olduğu için kapıdan anonim geçiliyor.`);
+    }
     
     return config;
   },
@@ -30,7 +33,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-// ✅ CEVAP (RESPONSE) ARAYA GİRİCİSİ - Gelen her cevabı kontrol eder
+// ✅ CEVAP (RESPONSE) ARAYA GİRİCİSİ
 apiClient.interceptors.response.use(
   (response: any) => {
     console.log(`✅ [API CEVABI] - Durum: ${response.status}`);

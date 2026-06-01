@@ -13,8 +13,9 @@ import { FavoritesProvider } from './src/context/FavoritesContext';
 import HomeScreen from './src/pages/Home';
 import PetDetailScreen from './src/pages/PetDetail';
 import ProfileScreen from './src/pages/Profile';
+import ApplicationsScreen from './src/pages/Applications'; // Eksik olan Başvurular sayfasını ekledik
 
-// 2. İsimli (Named) İçe Aktarımlar (Benim az önce sana verdiklerim - Süslü Parantezli)
+// 2. İsimli (Named) İçe Aktarımlar (Süslü Parantezli)
 import { AddPet } from './src/pages/AddPet';
 import { Favorites } from './src/pages/Favorites';
 import { Login } from './src/pages/Login';
@@ -34,10 +35,11 @@ function TabNavigator() {
         tabBarStyle: { paddingBottom: 5, height: 60, borderTopWidth: 0, elevation: 10 },
       }}
     >
-      <Tab.Screen name="Ana Sayfa" component={HomeScreen} options={{ tabBarIcon: ({ color }) => <HomeIcon color={color} /> }} />
-      <Tab.Screen name="Favoriler" component={Favorites} options={{ tabBarIcon: ({ color }) => <Heart color={color} /> }} />
-      <Tab.Screen name="İlan Ekle" component={AddPet} options={{ tabBarIcon: ({ color }) => <PlusCircle color={color} /> }} />
-      <Tab.Screen name="Profil" component={ProfileScreen} options={{ tabBarIcon: ({ color }) => <User color={color} /> }} />
+      {/* name değerleri kod için İngilizce yapıldı, title değerleri ekranda Türkçe görünecek */}
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Ana Sayfa', tabBarIcon: ({ color }) => <HomeIcon color={color} /> }} />
+      <Tab.Screen name="Favorites" component={Favorites} options={{ title: 'Favoriler', tabBarIcon: ({ color }) => <Heart color={color} /> }} />
+      <Tab.Screen name="AddPet" component={AddPet} options={{ title: 'İlan Ekle', tabBarIcon: ({ color }) => <PlusCircle color={color} /> }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil', tabBarIcon: ({ color }) => <User color={color} /> }} />
     </Tab.Navigator>
   );
 }
@@ -56,6 +58,7 @@ export default function App() {
                 {/* Alt menüsü olmayan (tam ekran) sayfalar burada tanımlanır */}
                 <Stack.Screen name="PetDetail" component={PetDetailScreen} />
                 <Stack.Screen name="Login" component={Login} />
+                <Stack.Screen name="Applications" component={ApplicationsScreen} />
               </Stack.Navigator>
             </NavigationContainer>
             <Toast />

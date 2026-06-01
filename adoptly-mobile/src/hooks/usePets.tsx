@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-// 👇 İŞTE BÜTÜN DÜĞÜMÜ ÇÖZECEK SATIR BU (Kendi klasör yapına göre yolunu ayarla)
+// 👇 İŞTE BÜTÜN DÜĞÜMÜ ÇÖZECEK SATIR BU
 import { apiClient } from '../services/apiClient'; 
 
 // 🐾 1. TÜM İLANLARI ÇEK (Ana Sayfa İçin)
@@ -8,8 +8,8 @@ export const usePets = () => {
     queryKey: ['pets'],
     queryFn: async () => {
       console.log("🔍 1. ADIM: usePets tetiklendi, gerçek apiClient kullanılıyor!");
-      const response = await apiClient.get('/animals');
-      // Spring Boot listeyi en eskiden yeniye yollayabilir, mobilde tersine çevirelim (en yeni en üstte)
+      // 💡 DÜZELTİLDİ: Sadece /animals yerine /api/animals yazıldı
+      const response = await apiClient.get('/api/animals');
       return response.data.reverse(); 
     },
   });
@@ -21,7 +21,8 @@ export const usePet = (id: string | undefined) => {
     queryKey: ['pet', id],
     queryFn: async () => {
       if (!id) return null;
-      const response = await apiClient.get(`/animals/${id}`);
+      // 💡 DÜZELTİLDİ: /api/ eklendi
+      const response = await apiClient.get(`/api/animals/${id}`);
       return response.data;
     },
     enabled: !!id,
@@ -34,8 +35,8 @@ export const useMyPets = (email: string | undefined) => {
     queryKey: ['my-pets', email],
     queryFn: async () => {
       if (!email) return [];
-      const response = await apiClient.get('/animals');
-      // Backend'den gelen veriyi frontend'de email'e göre filtreliyoruz
+      // 💡 DÜZELTİLDİ: /api/ eklendi
+      const response = await apiClient.get('/api/animals');
       const myPets = response.data.filter((pet: any) => pet.ownerEmail === email);
       return myPets.reverse();
     },
@@ -48,7 +49,8 @@ export const useAddPet = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (newPet: any) => {
-      const response = await apiClient.post('/animals', newPet);
+      // 💡 DÜZELTİLDİ: /api/ eklendi
+      const response = await apiClient.post('/api/animals', newPet);
       return response.data;
     },
     onSuccess: () => {
@@ -63,7 +65,8 @@ export const useUpdatePet = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (updatedPet: any) => {
-      const response = await apiClient.put(`/animals/${updatedPet.id}`, updatedPet);
+      // 💡 DÜZELTİLDİ: /api/ eklendi
+      const response = await apiClient.put(`/api/animals/${updatedPet.id}`, updatedPet);
       return response.data;
     },
     onSuccess: (_, variables) => {
@@ -79,7 +82,8 @@ export const useDeletePet = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      await apiClient.delete(`/animals/${id}`);
+      // 💡 DÜZELTİLDİ: /api/ eklendi
+      await apiClient.delete(`/api/animals/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pets'] });
