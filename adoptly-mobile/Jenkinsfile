@@ -1,0 +1,56 @@
+pipeline {
+    agent any
+
+    environment {
+        REGISTRY = 'adoptly-registry'
+        IMAGE_NAME = 'adoptly-frontend'
+        IMAGE_TAG = 'latest'
+    }
+
+    stages {
+        stage('1. Kodu Çek (Checkout)') {
+            steps {
+                echo 'Frontend kodları GitHub üzerinden çekiliyor...'
+                checkout scm
+            }
+        }
+
+        stage('2. Bağımlılıkları Kur (NPM Install)') {
+            steps {
+                echo 'React Native / Expo paketleri yükleniyor...'
+                sh 'npm install'
+            }
+        }
+
+        stage('3. Web Olarak Derle (Expo Export)') {
+            steps {
+                echo 'Mobil uygulama statik web sitesine dönüştürülüyor...'
+                sh 'npx expo export -p web'
+            }
+        }
+
+        stage('4. Docker İmajı Oluştur (Build)') {
+            steps {
+                echo 'Nginx sunucusu ile Docker imajı hazırlanıyor...'
+                sh "docker build -t ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} ."
+            }
+        }
+
+        stage('5. Lokal Dağıtım (Deploy)') {
+            steps {
+                echo 'Eski container durduruluyor ve 80 portunda canlıya alınıyor...'
+                sh "docker rm -f ${IMAGE_NAME}-container || true"
+                sh "docker run -d -p 80:80 --name ${IMAGE_NAME}-container ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Frontend CI/CD Başarılı! Uygulama yayında. 🚀'
+        }
+        failure {
+            echo 'Frontend CI/CD Patladı! Hataları kontrol et. ❌'
+        }
+    }
+}

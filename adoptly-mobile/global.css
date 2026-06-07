@@ -1,0 +1,13 @@
+/* global.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* React Native Web'in kronik sorununun çözümü: Kapsayıcıları tam ekran yap */
+html, body, #root {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}

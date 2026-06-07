@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import * as SecureStore from 'expo-secure-store'; // Güvenli Kasa Eklendi
+import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native'; // 👈 Cihaz kontrolü eklendi
 
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -18,14 +19,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Ziyaretçi kartını (Token) kasaya kaydeden veya silen muhafız fonksiyon
+  // Ziyaretçi kartını (Token) kasaya kaydeden veya silen akıllı muhafız fonksiyon
   const handleTokenStorage = async (session: Session | null) => {
     if (session?.access_token) {
-      // Supabase bir token verdiyse bunu kasaya kilitle (apiClient buradan okuyacak)
-      await SecureStore.setItemAsync('user_token', session.access_token);
+      // Supabase bir token verdiyse bunu kasaya kilitle
+      if (Platform.OS === 'web') {
+        localStorage.setItem('user_token', session.access_token);
+      } else {
+        await SecureStore.setItemAsync('user_token', session.access_token);
+      }
     } else {
       // Oturum yoksa kasayı boşalt
-      await SecureStore.deleteItemAsync('user_token');
+      if (Platform.OS === 'web') {
+        localStorage.removeItem('user_token');
+      } else {
+        await SecureStore.deleteItemAsync('user_token');
+      }
     }
   };
 
@@ -77,7 +86,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-    // Çıkış yapıldığında üstteki onAuthStateChange otomatik tetiklenip kasayı boşaltacaktır
   };
 
   return (

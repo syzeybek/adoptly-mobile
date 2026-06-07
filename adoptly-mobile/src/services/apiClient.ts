@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native'; // 👈 Cihaz kontrolü eklendi
 
 const BASE_URL = 'https://adoptly-mobilbackend.onrender.com';
 
@@ -14,11 +15,17 @@ export const apiClient = axios.create({
 // 🚀 İSTEK (REQUEST) ARAYA GİRİCİSİ - Akıllı Versiyon
 apiClient.interceptors.request.use(
   async (config: any) => {
-    const token = await SecureStore.getItemAsync('user_token');
+    // 👇 KRİTİK HAMLE: Akıllı Kasa Kontrolü
+    let token = null;
+    if (Platform.OS === 'web') {
+      token = localStorage.getItem('user_token'); // Web ise tarayıcı kasasına bak
+    } else {
+      token = await SecureStore.getItemAsync('user_token'); // Mobil ise şifreli kasaya bak
+    }
     
     console.log(`🚀 [API İSTEĞİ]: ${config.method?.toUpperCase()} ${config.url}`);
     
-    // 👇 KRİTİK HAMLE: Sadece GET "olmayan" işlemlerde (POST, DELETE vb.) kimliği göster!
+    // Sadece GET "olmayan" işlemlerde (POST, DELETE vb.) kimliği göster!
     if (token && config.method?.toUpperCase() !== 'GET') {
       console.log(`🔑 [KART GÖSTERİLDİ]: Yeni işlem yapıldığı için token eklendi.`);
       config.headers.Authorization = `Bearer ${token}`;
