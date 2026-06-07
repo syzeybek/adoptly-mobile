@@ -1,4 +1,3 @@
-// src/pages/PetDetail.tsx
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -12,7 +11,6 @@ export default function PetDetail() {
   const route = useRoute();
   const navigation = useNavigation();
   const { user } = useAuth();
-  // id, yönlendirme (navigation) parametrelerinden gelir
   const { id } = route.params as { id: string };
   const { data: pet, isLoading } = usePet(id);
 
@@ -69,22 +67,46 @@ export default function PetDetail() {
         
         <Text className="text-5xl font-black text-gray-900 mb-6">{pet.name}</Text>
 
-        {/* Bilgi Grid'i */}
+        {/* ✨ DÜZELTME: Bilgi Grid'i ✨ */}
         <View className="flex-row justify-between mb-8 gap-3">
-          <View className="flex-1 bg-gray-50 p-4 rounded-[24px] items-center">
+          <View className="flex-1 bg-gray-50 py-4 px-2 rounded-[24px] items-center overflow-hidden">
             <Dna color="#9B5DE5" size={24} className="mb-2" />
             <Text className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cinsi</Text>
-            <Text className="font-black text-gray-800 mt-1">{pet.breed}</Text>
+            {/* Tek satıra sığmaya ve gerekirse küçülmeye zorlanan metin */}
+            <Text 
+              className="font-black text-gray-800 mt-1 w-full text-center" 
+              numberOfLines={1} 
+              adjustsFontSizeToFit 
+              minimumFontScale={0.5}
+            >
+              {pet.breed}
+            </Text>
           </View>
-          <View className="flex-1 bg-gray-50 p-4 rounded-[24px] items-center">
+          
+          <View className="flex-1 bg-gray-50 py-4 px-2 rounded-[24px] items-center overflow-hidden">
             <Calendar color="#FEE440" size={24} className="mb-2" />
             <Text className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Yaşı</Text>
-            <Text className="font-black text-gray-800 mt-1">{pet.age}</Text>
+            <Text 
+              className="font-black text-gray-800 mt-1 w-full text-center" 
+              numberOfLines={1} 
+              adjustsFontSizeToFit 
+              minimumFontScale={0.5}
+            >
+              {pet.age}
+            </Text>
           </View>
-          <View className="flex-1 bg-gray-50 p-4 rounded-[24px] items-center">
+
+          <View className="flex-1 bg-gray-50 py-4 px-2 rounded-[24px] items-center overflow-hidden">
             <MapPin color="#FF85A1" size={24} className="mb-2" />
             <Text className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Konum</Text>
-            <Text className="font-black text-gray-800 mt-1">{pet.location}</Text>
+            <Text 
+              className="font-black text-gray-800 mt-1 w-full text-center" 
+              numberOfLines={1} 
+              adjustsFontSizeToFit 
+              minimumFontScale={0.5}
+            >
+              {pet.location}
+            </Text>
           </View>
         </View>
 
