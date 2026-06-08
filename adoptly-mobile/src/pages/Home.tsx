@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator, SafeAreaView, Modal, Pressable } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator, SafeAreaView, Modal, Pressable, Platform } from 'react-native'; // 👈 Platform modülü eklendi
 import { usePets } from '../hooks/usePets';
 import { PetCard } from '../components/PetCard';
 import { Background } from '../components/Background';
-import { Search, PawPrint, X, SlidersHorizontal, MapPin } from 'lucide-react-native';
+import { Search, PawPrint, SlidersHorizontal } from 'lucide-react-native';
 
 export default function Home() {
   const { data: pets, isLoading } = usePets();
@@ -16,7 +16,7 @@ export default function Home() {
   // Modal (Filtre Paneli) Görünürlüğü
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  // Benzersiz şehir ve cinsleri bulma (Web'deki mantığın birebir aynısı)
+  // Benzersiz şehir ve cinsleri bulma
   const { uniqueLocations, uniqueBreeds } = useMemo(() => {
     if (!pets) return { uniqueLocations: [], uniqueBreeds: [] };
     const locations = Array.from(new Set(pets.map((p: any) => p.location))).filter(Boolean);
@@ -35,7 +35,13 @@ export default function Home() {
     });
   }, [pets, searchTerm, selectedLocation, selectedBreed]);
 
-  // ... (isLoading kısmı öncekiyle aynı) ...
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#FF85A1" />
+      </SafeAreaView>
+    );
+  }
 
   const hasActiveFilters = selectedLocation !== 'Hepsi' || selectedBreed !== 'Hepsi';
 
@@ -43,6 +49,7 @@ export default function Home() {
     <SafeAreaView className="flex-1">
       <Background />
       
+      {/* Üst Arama ve Filtre Çubuğu */}
       <View className="px-4 pt-6 pb-2">
         <View className="flex-row items-center gap-3">
           {/* Arama Kutusu */}
@@ -66,33 +73,38 @@ export default function Home() {
         </View>
       </View>
 
-      
-        <FlatList
-  data={filteredPets}
-  keyExtractor={(item) => item.id.toString()} // Her bir karta benzersiz bir anahtar veriyoruz
-  renderItem={({ item }) => <PetCard pet={item} />} // Kartı ekrana böyle çiz diyoruz
-  contentContainerStyle={{ paddingBottom: 100, paddingTop: 10 }}
-  showsVerticalScrollIndicator={false}
-  ListEmptyComponent={() => (
-    <View className="items-center py-24 px-8 mt-10 bg-white/40 rounded-[40px] border-2 border-dashed border-gray-200 mx-4">
-      <View className="bg-gray-100 w-20 h-20 rounded-full items-center justify-center mb-4">
-        <PawPrint color="#D1D5DB" size={32} />
-      </View>
-      <Text className="text-center font-black text-gray-400 text-lg uppercase tracking-widest">
-        Aradığın kriterlerde bir dost bulamadık 😿
-      </Text>
-    </View>
-  )}
-/>
-      
+      {/* İlan Listesi */}
+      <FlatList
+        data={filteredPets}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <PetCard pet={item} />}
+        contentContainerStyle={{ paddingBottom: 100, paddingTop: 10 }}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={() => (
+          <View className="items-center py-24 px-8 mt-10 bg-white/40 rounded-[40px] border-2 border-dashed border-gray-200 mx-4">
+            <View className="bg-gray-100 w-20 h-20 rounded-full items-center justify-center mb-4">
+              <PawPrint color="#D1D5DB" size={32} />
+            </View>
+            <Text className="text-center font-black text-gray-400 text-lg uppercase tracking-widest">
+              Aradığın kriterlerde bir dost bulamadık 😿
+            </Text>
+          </View>
+        )}
+      />
 
       {/* ALTTAN AÇILAN FİLTRE PANELİ (MODAL) */}
       <Modal visible={isFilterVisible} animationType="slide" transparent={true}>
-        {/* Arka planı koyulaştıran ve tıklayınca kapatan alan */}
-        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setIsFilterVisible(false)}>
+        {/* Arka planı koyulaştıran alan (Web'de ortalamak için items-center eklendi) */}
+        <Pressable 
+          className="flex-1 bg-black/40 justify-end items-center" 
+          onPress={() => setIsFilterVisible(false)}
+        >
           
-          {/* İçerik Paneli */}
-          <Pressable className="bg-white rounded-t-[40px] p-6 pb-12 shadow-2xl">
+          {/* İçerik Paneli (Web platformunda 470px genişliğe kelepçelendi) */}
+          <Pressable 
+            style={{ width: '100%', maxWidth: Platform.OS === 'web' ? 470 : undefined }}
+            className="bg-white rounded-t-[40px] p-6 pb-12 shadow-2xl"
+          >
             <View className="w-16 h-1.5 bg-gray-200 rounded-full self-center mb-6" />
             
             <View className="flex-row justify-between items-center mb-6">

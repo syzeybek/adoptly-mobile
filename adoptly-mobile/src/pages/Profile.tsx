@@ -1,14 +1,16 @@
 // src/pages/Profile.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { User as UserIcon, PawPrint, FileText, LogOut, Loader2, Edit2, Trash2 } from 'lucide-react-native';
+import { User as UserIcon, PawPrint, FileText, LogOut, Edit2, Trash2 } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const queryClient = useQueryClient();
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState<'listings' | 'applications'>('listings');
   
@@ -17,16 +19,13 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      navigation.navigate('Login' as never);
-      return;
-    }
+    if (!user) return; 
+
     const fetchData = async () => {
       setLoading(true);
       try {
         const { data: listData } = await supabase.from('pets').select('*').eq('user_id', user.id);
         if (listData) setListings(listData);
-        // Not: Başvurularım mantığını Applications ekranına ayırdık ama burada da çizebiliriz.
       } catch (err) {
         console.error("Hata:", err);
       } finally {
@@ -52,9 +51,16 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: async () => {
             try {
+              // 1. Veritabanından (Supabase) tamamen sil
               await supabase.from('pets').delete().eq('id', petId);
+              
+              // 2. Profildeki lokal listeyi anında güncelle
               setListings(prev => prev.filter(pet => pet.id !== petId));
-              Toast.show({ type: 'success', text1: 'Başarılı', text2: 'İlan kaldırıldı.' });
+              
+              // 3. Ana sayfadaki React Query önbelleğini patlat ve anında yenile!
+              queryClient.invalidateQueries({ queryKey: ['pets'] });
+
+              Toast.show({ type: 'success', text1: 'Başarılı', text2: 'İlan her yerden anında silindi.' });
             } catch (err) {
               Toast.show({ type: 'error', text1: 'Hata', text2: 'İlan silinirken bir hata oluştu.' });
             }
@@ -64,7 +70,28 @@ export default function ProfileScreen() {
     );
   };
 
-  if (!user) return null;
+  // Ziyaretçi Kalkanı
+  if (!user) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50 justify-center items-center px-6">
+        <View className="bg-white w-full p-8 rounded-[40px] items-center shadow-sm border border-gray-100">
+          <View className="w-24 h-24 bg-brand-pink/10 rounded-full items-center justify-center mb-6">
+            <UserIcon color="#FF85A1" size={48} />
+          </View>
+          <Text className="text-2xl font-black text-gray-800 mb-3 text-center">Aramıza Katıl!</Text>
+          <Text className="text-gray-500 text-center mb-8 font-medium">
+            Sisteme ilan verebilmek, detaylı profilini görmek ve dostlarımızı favorilerine eklemek için hesabına giriş yapmalısın.
+          </Text>
+          <TouchableOpacity 
+            onPress={() => (navigation as any).navigate('Login')}
+            className="w-full bg-gray-900 py-4 rounded-full items-center shadow-md"
+          >
+            <Text className="text-white font-black text-lg">Giriş Yap / Kayıt Ol</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <ScrollView className="flex-1 bg-gray-50" contentContainerStyle={{ padding: 20, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
@@ -92,7 +119,7 @@ export default function ProfileScreen() {
           <Text className={`font-black ${activeTab === 'listings' ? 'text-brand-purple' : 'text-gray-400'}`}>İlanlarım</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          onPress={() => navigation.navigate('Applications' as never)} // Başvurularımı ayrı sayfaya yolluyoruz
+          onPress={() => navigation.navigate('Applications' as never)} 
           className={`flex-1 py-3 rounded-3xl items-center flex-row justify-center gap-2`}
         >
           <FileText color="#9CA3AF" size={18} />
@@ -120,9 +147,12 @@ export default function ProfileScreen() {
                 </View>
               </View>
               <View className="flex-row gap-2">
-                <TouchableOpacity onPress={() => (navigation as any).navigate('PetDetail', { id: pet.id })} className="p-3 bg-brand-cyan/10 rounded-xl">
+                
+                {/* 🚨 SİHİRLİ DOKUNUŞ BURADA: PetDetail yerine EditPet sayfasına yönlendirildi! */}
+                <TouchableOpacity onPress={() => (navigation as any).navigate('EditPet', { id: pet.id })} className="p-3 bg-brand-cyan/10 rounded-xl">
                   <Edit2 color="#00BBF9" size={18} />
                 </TouchableOpacity>
+                
                 <TouchableOpacity onPress={() => handleDeleteListing(pet.id, pet.name)} className="p-3 bg-red-50 rounded-xl">
                   <Trash2 color="#EF4444" size={18} />
                 </TouchableOpacity>
